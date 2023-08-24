@@ -16,11 +16,11 @@ import (
 	"runtime"
 	"github.com/fatih/color"
 	"github.com/tidwall/gjson"
-	"axe/ui"
+	"axe.v2/ui"
 )
 
 var DEBUG = false 
-var ConfigFile = ".axe2.config.json"
+var ConfigFile = ".axe.v2.config.json"
 
 var Title = color.New(color.FgCyan).Add(color.Bold)
 var Green = color.New(color.FgGreen)
