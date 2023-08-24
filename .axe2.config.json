@@ -1,0 +1,54 @@
+{
+  "version": "1.2.2",
+  "tags": [
+    {
+      "tag": "15",
+      "address": "192.222.1.15",
+      "port": 22,
+      "username": "root",
+      "password": "donotuseroot!"
+    },
+    {
+      "tag": "22",
+      "address": "192.222.1.22",
+      "port": 22,
+      "username": "root",
+      "password": "donotuseroot!"
+    },
+    {
+      "tag": "172",
+      "address": "192.222.1.172",
+      "port": 22,
+      "username": "root",
+      "password": "donotuseroot!"
+    },
+    {
+      "tag": "23",
+      "address": "192.222.1.23",
+      "port": 22,
+      "username": "root",
+      "password": "donotuseroot!"
+    },
+    {
+      "tag": "40",
+      "address": "192.222.1.40",
+      "port": 22,
+      "username": "root",
+      "password": "donotuseroot!"
+    }
+  ],
+  "passwords": [
+    {
+      "password": "donotuseroot!",
+      "default": false
+    },
+    {
+		"password": "we@cloud9F!",
+		"default": false
+	},
+	{
+		"password": "idv-terminal!@#",
+		"default": false
+	}
+  ]
+}
