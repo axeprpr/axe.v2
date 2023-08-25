@@ -9,7 +9,7 @@ type tagModel struct {
 	modelType 			modelType
 	content     		[]byte
 	listItems			[]map[string]interface{}
-	listSelected		string
+	selectedItem		string
 	list				list.Model
 	
 	inputItem			map[string]interface{}
@@ -115,14 +115,98 @@ func (m tagModel) listUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "e":
 			i, ok := m.list.SelectedItem().(listItem)
 			if ok {
-				m.editMode = true
-				return m, nil
+				m.modelType = tagEdit
+				m.selectedItem = i
 			}
+			return m, nil
+		
+		case "a":
+			m.modelType = tagEdit
+			m.newItem = true
+			return m, nil
+		
+		case "d":
+			m.modelType = tagEdit
+			i, ok := m.list.SelectedItem().(listItem)
+			if ok {
+				m.deleteItem(i)
+			}
+			return initialListModel(m), nil
 		}
 	} 
 }
 
+func (m *tagModel) updateInputs(msg tea.Msg) tea.Cmd {
+	cmds := make([]tea.Cmd, len(m.inputs))
+
+	for i := range m.inputs {
+		m.inputs[i], cmds[i] = m.inputs[i].Update(msg)
+	}
+
+	return tea.Batch(cmds...)
+}
+
 func (m tagModel) editUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "esc":
+			return m, tea.Quit
+
+			m.cursorMode++
+			if m.cursorMode > textinput.CursorHide {
+				m.cursorMode = textinput.CursorBlink
+			}
+			cmds := make([]tea.Cmd, len(m.inputs))
+			for i := range m.inputs {
+				cmds[i] = m.inputs[i].SetCursorMode(m.cursorMode)
+			}
+			return m, tea.Batch(cmds...)
+
+		// Set focus to next input
+		case "tab", "shift+tab", "enter", "up", "down":
+			s := msg.String()
+
+			if s == "enter" && m.focusIndex == len(m.inputs) {
+				return m, tea.Quit
+			}
+
+			// Cycle indexes
+			if s == "up" || s == "shift+tab" {
+				m.focusIndex--
+			} else {
+				m.focusIndex++
+			}
+
+			if m.focusIndex > len(m.inputs) {
+				m.focusIndex = 0
+			} else if m.focusIndex < 0 {
+				m.focusIndex = len(m.inputs)
+			}
+
+			cmds := make([]tea.Cmd, len(m.inputs))
+			for i := 0; i <= len(m.inputs)-1; i++ {
+				if i == m.focusIndex {
+					// Set focused state
+					cmds[i] = m.inputs[i].Focus()
+					m.inputs[i].PromptStyle = focusedStyle
+					m.inputs[i].TextStyle = focusedStyle
+					continue
+				}
+				// Remove focused state
+				m.inputs[i].Blur()
+				m.inputs[i].PromptStyle = noStyle
+				m.inputs[i].TextStyle = noStyle
+			}
+
+			return m, tea.Batch(cmds...)
+		}
+
+	}
+	// Handle character input and blinking
+	cmd := m.updateInputs(msg)
+
+	return m, cmd
 }
 
 func (m tagModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -136,6 +220,33 @@ func (m tagModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	default:
 		return m, nil
 	}
+}
+
+func (m tagModel) listView() string {
+	if m.quit {
+		return quitTextStyle.Render("bye")
+	}
+	if m.listSelected != "" && m.editMode == true {
+	var b strings.Builder
+	m.initialInputModel(m.key, false)
+	
+	for i := range m.inputs {
+		b.WriteString(m.inputs[i].View())
+		if i < len(m.inputs)-1 {
+			b.WriteRune('\n')
+		}
+	}
+	button := &blurredButton
+	if m.focusIndex == len(m.inputs) {
+		button = &focusedButton
+	}
+	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
+	return b.String()
+	}
+	return m.list.View()
+}
+
+func (m tagModel) editView() string {
 }
 
 func (m tagModel) View() string {
